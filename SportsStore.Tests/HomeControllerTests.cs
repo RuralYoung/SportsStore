@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using SportsStore.Controllers;
 using SportsStore.Models;
+using SportsStore.Models.ViewModels;
 using Xunit;
 namespace SportsStore.Tests
 {
@@ -15,20 +16,19 @@ namespace SportsStore.Tests
         {
             // Arrange
             Mock<IStoreRepository> mock = new Mock<IStoreRepository>();
+            
             mock.Setup(m => m.Products).Returns((new Product[] {
                  new Product {ProductID = 1, Name = "P1"},
                  new Product {ProductID = 2, Name = "P2"}
             }).AsQueryable<Product>());
+            
             HomeController controller = new HomeController(mock.Object);
 
             // Act
-            IEnumerable<Product>? result =
-            (controller.Index() as ViewResult)?.ViewData.Model
-            as IEnumerable<Product>;
+            ProductsListViewModel result = controller.Index()?.ViewData.Model as ProductsListViewModel ?? new();
 
             // Assert
-            Product[] prodArray = result?.ToArray()
-            ?? Array.Empty<Product>();
+            Product[] prodArray = result.Products.ToArray();
             Assert.True(prodArray.Length == 2);
             Assert.Equal("P1", prodArray[0].Name);
             Assert.Equal("P2", prodArray[1].Name);
@@ -52,13 +52,10 @@ namespace SportsStore.Tests
             controller.PageSize = 3;
 
             // Act
-            IEnumerable<Product> result =
-                (controller.Index(2) as ViewResult)?.ViewData.Model
-                    as IEnumerable<Product>
-                        ?? Enumerable.Empty<Product>();
+            ProductsListViewModel result = controller.Index(2)?.ViewData.Model as ProductsListViewModel ?? new();
 
             // Assert
-            Product[] prodArray = result.ToArray();
+            Product[] prodArray = result.Products.ToArray();
             Assert.True(prodArray.Length == 2);
             Assert.Equal("P4", prodArray[0].Name);
             Assert.Equal("P5", prodArray[1].Name);
